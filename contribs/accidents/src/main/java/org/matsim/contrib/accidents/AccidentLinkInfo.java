@@ -19,11 +19,11 @@
 
 package org.matsim.contrib.accidents;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
 * @author ikaddoura, mmayobre
@@ -34,7 +34,11 @@ class AccidentLinkInfo {
 	private final Id<Link> linkId;
 	
 	private final Map<Integer, TimeBinInfo> timeSpecificInfo = new HashMap<>();
-	
+
+	private final Map<AccidentType, Map<Integer, Double>> lightCrashRateByAccidentTypeByTime = new HashMap<>();
+
+	private final Map<AccidentType, Map<Integer, Double>> severeFatalCrashRateByAccidentTypeByTime = new HashMap<>();
+
 	public AccidentLinkInfo(Id<Link> linkId) {
 		this.linkId = linkId;
 	}
@@ -47,5 +51,12 @@ class AccidentLinkInfo {
 		return timeSpecificInfo;
 	}
 
+	public Map<AccidentType, Map<Integer, Double>> getLightCrashRateByAccidentTypeByTime() {
+		return lightCrashRateByAccidentTypeByTime;
+	}
+
+	public Map<AccidentType, Map<Integer, Double>> getSevereFatalCrashRateByAccidentTypeByTime() {
+		return severeFatalCrashRateByAccidentTypeByTime;
+	}
 }
 

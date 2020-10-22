@@ -23,8 +23,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.google.inject.Inject;
+import javafx.util.converter.PercentageStringConverter;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.population.Person;
 
 /**
 * @author ikaddoura
@@ -38,9 +40,14 @@ public final class AccidentsContext {
 	
 	private Map<Id<Link>, AccidentLinkInfo> linkId2info = new HashMap<>();
 
+	private Map<Id<Person>, AccidentAgentInfo> personId2info = new HashMap<>();
+
 	Map<Id<Link>, AccidentLinkInfo> getLinkId2info() {
 		return linkId2info;
 	}
 
+	public Map<Id<Person>, AccidentAgentInfo> getPersonId2info() {
+		return personId2info;
+	}
 }
 
