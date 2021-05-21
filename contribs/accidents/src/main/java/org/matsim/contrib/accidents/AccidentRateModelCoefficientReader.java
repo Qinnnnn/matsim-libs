@@ -42,6 +42,9 @@ public class AccidentRateModelCoefficientReader {
             while ((recString = in.readLine()) != null) {
                 recCount++;
                 String[] lineElements = recString.split(",");
+                if(lineElements.length==0){
+                    logger.fatal("recCount = " + recCount + ", recString = <" + recString + ">");
+                }
                 String variableName = lineElements[posVariable];
                 double coefficient = Double.parseDouble(lineElements[posCoefficient]);
 
@@ -57,6 +60,39 @@ public class AccidentRateModelCoefficientReader {
     }
 
     public Map<Integer, Double> readTimeOfDayData() {
+        String modelType = accidentType.toString();
+        logger.info("Reading "+ modelType + " time of day coefficients from csv file");
+
+        String recString = "";
+        int recCount = 0;
+        try {
+            BufferedReader in = new BufferedReader(new FileReader(path));
+            recString = in.readLine();
+
+            // read header
+            String[] header = recString.split(",");
+            int posTime = findPositionInArray("Hour", header);
+            int posValue = findPositionInArray(modelType,header);
+
+            // read line
+            while ((recString = in.readLine()) != null) {
+                recCount++;
+                String[] lineElements = recString.split(",");
+                int time = Integer.parseInt(lineElements[posTime]);
+                double value = Double.parseDouble(lineElements[posValue]);
+
+                timeOfDayDistribution.put(time, value);
+            }
+        } catch (IOException e) {
+            logger.fatal("IO Exception caught reading " + modelType + " file: " + path);
+            logger.fatal("recCount = " + recCount + ", recString = <" + recString + ">");
+        }
+
+        logger.info("Finished reading ");
+        return timeOfDayDistribution;
+    }
+
+    public Map<Integer, Double> readCasualtyData() {
         String modelType = accidentType.toString();
         logger.info("Reading "+ modelType + " time of day coefficients from csv file");
 

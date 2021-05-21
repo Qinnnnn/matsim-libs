@@ -19,14 +19,13 @@
 
 package org.matsim.contrib.accidents;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.google.inject.Inject;
-import javafx.util.converter.PercentageStringConverter;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
 * @author ikaddoura

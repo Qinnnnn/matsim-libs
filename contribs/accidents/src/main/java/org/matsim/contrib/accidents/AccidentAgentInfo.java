@@ -13,6 +13,7 @@ public class AccidentAgentInfo {
     private double lightInjuryRisk;
     private double severeInjuryRisk;
 
+
     public AccidentAgentInfo(Id<Person> id) {
         this.personId = id;
     }

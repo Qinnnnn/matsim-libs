@@ -35,9 +35,17 @@ class AccidentLinkInfo {
 	
 	private final Map<Integer, TimeBinInfo> timeSpecificInfo = new HashMap<>();
 
-	private final Map<AccidentType, Map<Integer, Double>> lightCrashRateByAccidentTypeByTime = new HashMap<>();
+	private  Map<AccidentType, Map<Integer, Double>> lightCrashRateByAccidentTypeByTime = new HashMap<>();
 
-	private final Map<AccidentType, Map<Integer, Double>> severeFatalCrashRateByAccidentTypeByTime = new HashMap<>();
+	private  Map<AccidentType, Map<Integer, Double>> severeFatalCrashRateByAccidentTypeByTime = new HashMap<>();
+
+	private  Map<AccidentType, Map<Integer, Double>> lightCasualityRateByAccidentTypeByTime = new HashMap<>();
+
+	private  Map<AccidentType, Map<Integer, Double>> severeFatalCasualityRateByAccidentTypeByTime = new HashMap<>();
+
+	private  Map<AccidentType, Map<Integer, Double>> lightCasualityExposureByAccidentTypeByTime = new HashMap<>();
+
+	private  Map<AccidentType, Map<Integer, Double>> severeFatalCasualityExposureByAccidentTypeByTime = new HashMap<>();
 
 	public AccidentLinkInfo(Id<Link> linkId) {
 		this.linkId = linkId;
@@ -57,6 +65,22 @@ class AccidentLinkInfo {
 
 	public Map<AccidentType, Map<Integer, Double>> getSevereFatalCrashRateByAccidentTypeByTime() {
 		return severeFatalCrashRateByAccidentTypeByTime;
+	}
+
+	public Map<AccidentType, Map<Integer, Double>> getLightCasualityRateByAccidentTypeByTime() {
+		return lightCasualityRateByAccidentTypeByTime;
+	}
+
+	public Map<AccidentType, Map<Integer, Double>> getSevereFatalCasualityRateByAccidentTypeByTime() {
+		return severeFatalCasualityRateByAccidentTypeByTime;
+	}
+
+	public Map<AccidentType, Map<Integer, Double>> getLightCasualityExposureByAccidentTypeByTime() {
+		return lightCasualityExposureByAccidentTypeByTime;
+	}
+
+	public Map<AccidentType, Map<Integer, Double>> getSevereFatalCasualityExposureByAccidentTypeByTime() {
+		return severeFatalCasualityExposureByAccidentTypeByTime;
 	}
 }
 
