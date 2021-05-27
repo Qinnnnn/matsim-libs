@@ -33,7 +33,6 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.events.handler.EventHandler;
 import org.matsim.vehicles.Vehicle;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +41,7 @@ import java.util.Map;
 * @author ikaddoura
 */
 
-public class AnalysisEventHandler implements EventHandler, LinkLeaveEventHandler, PersonEntersVehicleEventHandler, PersonDepartureEventHandler {
+public final class AnalysisEventHandlerOnline extends AnalysisEventHandler {
 
 	private final Map<Id<Link>, Map<Integer, Integer>> linkId2time2leavingAgents = new HashMap<>();
 	private final Map<Id<Link>, Map<Integer, List<Id<Person>>>> linkId2time2personIds = new HashMap<>();
@@ -51,7 +50,8 @@ public class AnalysisEventHandler implements EventHandler, LinkLeaveEventHandler
 	private final Map<Id<Person>, String> personId2legMode = new HashMap<>();
 
 
-	@Inject AnalysisEventHandler(){}
+	@Inject
+    AnalysisEventHandlerOnline(){}
 	
 	@Inject
 	private Scenario scenario;
@@ -131,20 +131,6 @@ public class AnalysisEventHandler implements EventHandler, LinkLeaveEventHandler
 				time2leavingAgents.put(timeBinNr,1);
 				mode2time2leavingAgents.put(legMode,time2leavingAgents);
 				linkId2mode2time2leavingAgents.put(linkId, mode2time2leavingAgents);
-			}
-
-			AccidentAgentInfo personInfo = accidentsContext.getPersonId2info().get(getDriverId(event.getVehicleId()));
-			if(personInfo==null){
-				personInfo = new AccidentAgentInfo(getDriverId(event.getVehicleId()));
-				accidentsContext.getPersonId2info().put(getDriverId(event.getVehicleId()),personInfo);
-			}
-			int hour = (int) (event.getTime()/3600);
-			if(personInfo.getLinkId2time2mode().get(linkId)!=null){
-				personInfo.getLinkId2time2mode().get(linkId).put(hour, legMode);
-			}else{
-				Map<Integer, String> time2Mode = new HashMap<>();
-				time2Mode.put(hour, legMode);
-				personInfo.getLinkId2time2mode().put(linkId, time2Mode);
 			}
 
 		}

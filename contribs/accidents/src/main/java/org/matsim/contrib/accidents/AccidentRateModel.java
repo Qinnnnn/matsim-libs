@@ -26,18 +26,20 @@ public class AccidentRateModel {
     private final double SCALEFACTOR;
     private AccidentsContext accidentsContext = new AccidentsContext();
     private AnalysisEventHandler analysisEventHandler = new AnalysisEventHandler();
-    private static final double CAR_LIGHT_LIGHT = 1.0;
-    private static final double CAR_SEVERE_LIGHT = 1.0;
-    private static final double CAR_SEVERE_SEVERE = 1.0;
-    private static final double BIKECAR_LIGHT_LIGHT = 1.0;
-    private static final double BIKECAR_SEVERE_LIGHT = 1.0;
-    private static final double BIKECAR_SEVERE_SEVERE = 1.0;
-    private static final double BIKEBIKE_LIGHT_LIGHT = 1.0;
-    private static final double BIKEBIKE_SEVERE_LIGHT = 1.0;
-    private static final double BIKEBIKE_SEVERE_SEVERE = 1.0;
-    private static final double PED_LIGHT_LIGHT = 1.0;
-    private static final double PED_SEVERE_LIGHT = 1.0;
-    private static final double PED_SEVERE_SEVERE = 1.0;
+    private AnalysisEventHandlerOnline analysisEventHandlerOnline = new AnalysisEventHandlerOnline();
+
+    private static final double CAR_LIGHT_LIGHT = 1.23;
+    private static final double CAR_SEVERE_LIGHT = 0.29;
+    private static final double CAR_SEVERE_SEVERE = 1.01;
+    private static final double BIKECAR_LIGHT_LIGHT = 0.99;
+    private static final double BIKECAR_SEVERE_LIGHT = 0.01;
+    private static final double BIKECAR_SEVERE_SEVERE = 0.99;
+    private static final double BIKEBIKE_LIGHT_LIGHT = 1.05;
+    private static final double BIKEBIKE_SEVERE_LIGHT = 0.00;
+    private static final double BIKEBIKE_SEVERE_SEVERE = 1.00;
+    private static final double PED_LIGHT_LIGHT = 1.03;
+    private static final double PED_SEVERE_LIGHT = 0.05;
+    private static final double PED_SEVERE_SEVERE = 1.00;
     private int count;
     private int counterCar;
     private int counterBikePed;
@@ -47,7 +49,117 @@ public class AccidentRateModel {
         SCALEFACTOR = scalefactor;
     }
 
-    public void run() {
+    public void runModelOnline() {
+        com.google.inject.Injector injector = Injector.createInjector( scenario.getConfig() , new AbstractModule(){
+            @Override public void install(){
+                install( new ScenarioByInstanceModule( scenario ) );
+                install( new AccidentsModule()) ;
+                install( new EventsManagerModule());
+            }
+        }) ;
+
+        log.info("Reading network file...");
+        String networkFile;
+        if (this.scenario.getConfig().controler().getRunId() == null || this.scenario.getConfig().controler().getRunId().equals("")) {
+            networkFile = this.scenario.getConfig().controler().getOutputDirectory() + "car/" + "output_network.xml.gz";
+        } else {
+            networkFile = this.scenario.getConfig().controler().getOutputDirectory() + "car/" + this.scenario.getConfig().controler().getRunId() + ".output_network.xml.gz";
+        }
+        new MatsimNetworkReader(scenario.getNetwork()).readFile(networkFile);
+        log.info("Reading network file... Done.");
+
+        log.info("Reading car plans file...");
+        PopulationReader popReader = new PopulationReader(scenario);
+        String plansFile;
+        if (this.scenario.getConfig().controler().getRunId() == null || this.scenario.getConfig().controler().getRunId().equals("")) {
+            plansFile = this.scenario.getConfig().controler().getOutputDirectory() + "car/" + "output_plans.xml.gz";
+        } else {
+            plansFile = this.scenario.getConfig().controler().getOutputDirectory() + "car/" + this.scenario.getConfig().controler().getRunId() + ".output_plans.xml.gz";
+        }
+        popReader.readFile(plansFile);
+        log.info("Reading car plans file... Done.");
+
+        log.warn("Total population:" + scenario.getPopulation().getPersons().size());
+
+        log.info("Reading bikePed plans file...");
+        String plansFileBikePed;
+        if (this.scenario.getConfig().controler().getRunId() == null || this.scenario.getConfig().controler().getRunId().equals("")) {
+            plansFileBikePed = this.scenario.getConfig().controler().getOutputDirectory() + "bikePed/" + "output_plans.xml.gz";
+        } else {
+            plansFileBikePed = this.scenario.getConfig().controler().getOutputDirectory() + "bikePed/" + this.scenario.getConfig().controler().getRunId() + ".output_plans.xml.gz";
+        }
+        popReader.readFile(plansFileBikePed);
+        log.info("Reading bikePed plans file... Done.");
+        log.warn("Total population:" + scenario.getPopulation().getPersons().size());
+
+
+
+        analysisEventHandlerOnline.setScenario(scenario);
+        analysisEventHandlerOnline.setAccidentsContext(accidentsContext);
+        log.info("Reading car events file...");
+        EventsManager events = injector.getInstance( EventsManager.class ) ;
+        MatsimEventsReader eventsReader = new MatsimEventsReader(events);
+        String eventsFile;
+        if (this.scenario.getConfig().controler().getRunId() == null || this.scenario.getConfig().controler().getRunId().equals("")) {
+            eventsFile = this.scenario.getConfig().controler().getOutputDirectory() + "car/" + "output_events.xml.gz";
+        } else {
+            eventsFile = this.scenario.getConfig().controler().getOutputDirectory() + "car/" + this.scenario.getConfig().controler().getRunId() + ".output_events.xml.gz";
+        }
+        events.addHandler(analysisEventHandlerOnline);
+        eventsReader.readFile(eventsFile); //car AADT are calculated by eventHandler
+        log.info("Reading car events file... Done.");
+
+        log.info("Reading bike&ped events file...");
+        String eventsFileBikePed;
+        if (this.scenario.getConfig().controler().getRunId() == null || this.scenario.getConfig().controler().getRunId().equals("")) {
+            eventsFileBikePed = this.scenario.getConfig().controler().getOutputDirectory() + "bikePed/" + "output_events.xml.gz";
+        } else {
+            eventsFileBikePed = this.scenario.getConfig().controler().getOutputDirectory() + "bikePed/" + this.scenario.getConfig().controler().getRunId() + ".output_events.xml.gz";
+        }
+        eventsReader.readFile(eventsFileBikePed); //car, bike, ped AADT are calculated by eventHandler
+        log.info("Reading bike&ped events file... Done.");
+
+
+        //Preparation
+        for (Link link : this.scenario.getNetwork().getLinks().values()) {
+            AccidentLinkInfo info = new AccidentLinkInfo(link.getId());
+            this.accidentsContext.getLinkId2info().put(link.getId(), info);
+        }
+        log.info("Initializing all link-specific information... Done.");
+
+//        for (Person person : this.scenario.getPopulation().getPersons().values()) {
+//            AccidentAgentInfo info = new AccidentAgentInfo(person.getId());
+//            this.accidentsContext.getPersonId2info().put(person.getId(), info);
+//        }
+//        log.info("Initializing all agent-specific information... Done.");
+
+
+        log.info("Link accident frequency calculation (by type by time of day) start.");
+        for (AccidentType accidentType : AccidentType.values()){
+            for (AccidentSeverity accidentSeverity : AccidentSeverity.values()){
+                AccidentRateCalculation calculator = new AccidentRateCalculation(SCALEFACTOR, accidentsContext, analysisEventHandlerOnline, accidentType, accidentSeverity);
+                calculator.run(this.scenario.getNetwork().getLinks().values());
+                log.info("Calculating " + accidentType + "_" + accidentSeverity + " crash rate done.");
+            }
+        }
+        log.info("Link accident frequency calculation completed.");
+
+        log.info("Link casualty frequency conversion (by type by time of day) start.");
+        for (Link link : this.scenario.getNetwork().getLinks().values()) {
+            casualtyRateCalculation(link);
+        }
+        log.info("Link casualty frequency conversion completed.");
+
+        log.info("Link casualty exposure calculation start.");
+        for (Link link : this.scenario.getNetwork().getLinks().values()) {
+            computeLinkCasualtyExposure(link);
+        }
+        log.info(counterCar + "car links have no hourly traffic volume");
+        log.info(counterBikePed + "bikeped links have no hourly traffic volume");
+        log.info("Link casualty exposure calculation completed.");
+    }
+
+    public void runModelOffline() {
         com.google.inject.Injector injector = Injector.createInjector( scenario.getConfig() , new AbstractModule(){
             @Override public void install(){
                 install( new ScenarioByInstanceModule( scenario ) );
@@ -156,6 +268,7 @@ public class AccidentRateModel {
         log.info(counterBikePed + "bikeped links have no hourly traffic volume");
         log.info("Link casualty exposure calculation completed.");
 
+        //only for offline
         log.info("Agent crash risk calculation start.");
         for (Person pp : this.scenario.getPopulation().getPersons().values()){
             AccidentAgentInfo personInfo = this.accidentsContext.getPersonId2info().get(pp.getId());

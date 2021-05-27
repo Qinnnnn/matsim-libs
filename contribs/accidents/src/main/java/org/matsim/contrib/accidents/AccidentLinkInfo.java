@@ -29,7 +29,7 @@ import java.util.Map;
 * @author ikaddoura, mmayobre
 */
 
-class AccidentLinkInfo {
+public class AccidentLinkInfo {
 	
 	private final Id<Link> linkId;
 	

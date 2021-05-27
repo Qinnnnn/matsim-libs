@@ -41,7 +41,7 @@ public final class AccidentsContext {
 
 	private Map<Id<Person>, AccidentAgentInfo> personId2info = new HashMap<>();
 
-	Map<Id<Link>, AccidentLinkInfo> getLinkId2info() {
+	public Map<Id<Link>, AccidentLinkInfo> getLinkId2info() {
 		return linkId2info;
 	}
 
