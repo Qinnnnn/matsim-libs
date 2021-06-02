@@ -137,7 +137,8 @@ public class AccidentRateModel {
         log.info("Link accident frequency calculation (by type by time of day) start.");
         for (AccidentType accidentType : AccidentType.values()){
             for (AccidentSeverity accidentSeverity : AccidentSeverity.values()){
-                AccidentRateCalculation calculator = new AccidentRateCalculation(SCALEFACTOR, accidentsContext, analysisEventHandlerOnline, accidentType, accidentSeverity);
+                String basePath = scenario.getScenarioElement("accidentModelFile").toString();
+                AccidentRateCalculation calculator = new AccidentRateCalculation(SCALEFACTOR, accidentsContext, analysisEventHandlerOnline, accidentType, accidentSeverity, basePath);
                 calculator.run(this.scenario.getNetwork().getLinks().values());
                 log.info("Calculating " + accidentType + "_" + accidentSeverity + " crash rate done.");
             }
@@ -247,7 +248,8 @@ public class AccidentRateModel {
         log.info("Link accident frequency calculation (by type by time of day) start.");
         for (AccidentType accidentType : AccidentType.values()){
             for (AccidentSeverity accidentSeverity : AccidentSeverity.values()){
-                AccidentRateCalculation calculator = new AccidentRateCalculation(SCALEFACTOR, accidentsContext, analysisEventHandler, accidentType, accidentSeverity);
+                String basePath = scenario.getScenarioElement("accidentModelFile").toString();
+                AccidentRateCalculation calculator = new AccidentRateCalculation(SCALEFACTOR, accidentsContext, analysisEventHandler, accidentType, accidentSeverity,basePath);
                 calculator.run(this.scenario.getNetwork().getLinks().values());
                 log.info("Calculating " + accidentType + "_" + accidentSeverity + " crash rate done.");
             }

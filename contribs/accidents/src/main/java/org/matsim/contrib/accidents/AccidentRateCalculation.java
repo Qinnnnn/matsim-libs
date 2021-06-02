@@ -19,13 +19,12 @@ public class AccidentRateCalculation {
     private AccidentSeverity accidentSeverity;
 
 
-    public AccidentRateCalculation(double scaleFactor, AccidentsContext accidentsContext, AnalysisEventHandler analzyer, AccidentType accidentType, AccidentSeverity accidentSeverity) {
+    public AccidentRateCalculation(double scaleFactor, AccidentsContext accidentsContext, AnalysisEventHandler analzyer, AccidentType accidentType, AccidentSeverity accidentSeverity, String basePath) {
         this.SCALEFACTOR = scaleFactor;
         this.accidentsContext = accidentsContext;
         this.analzyer = analzyer;
         this.accidentType = accidentType;
         this.accidentSeverity = accidentSeverity;
-        String basePath = "F:/models/muc/input/accident/";
         this.binaryLogitCoef =
                 new AccidentRateModelCoefficientReader(accidentType, accidentSeverity, basePath + "binaryModel.csv").readData();
         this.poissonCoef =

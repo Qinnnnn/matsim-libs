@@ -60,7 +60,7 @@ public class AccidentRateModelCoefficientReader {
     }
 
     public Map<Integer, Double> readTimeOfDayData() {
-        String modelType = accidentType.toString();
+        String modelType = accidentType.toString() + "_" + accidentSeverity.toString();
         logger.info("Reading "+ modelType + " time of day coefficients from csv file");
 
         String recString = "";
