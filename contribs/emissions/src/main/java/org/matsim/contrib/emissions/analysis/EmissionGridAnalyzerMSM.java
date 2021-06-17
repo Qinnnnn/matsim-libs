@@ -80,16 +80,16 @@ public class EmissionGridAnalyzerMSM {
      * @param eventsFile Path to the events file e.g. '/path/to/events.xml.gz
      * @return TimeBinMap containing a grid which maps pollutants to values.
      */
-    public TimeBinMap<Grid<Map<Pollutant, Double>>> process(String eventsFile) {
+    public TimeBinMap<Grid<Map<Pollutant, Float>>> process(String eventsFile) {
 
         TimeBinMap<Map<Id<Link>, EmissionsByPollutant>> timeBinsWithEmissions = processEventsFile(eventsFile);
-        TimeBinMap<Grid<Map<Pollutant, Double>>> result = new TimeBinMap<>(binSize,startTime);
+        TimeBinMap<Grid<Map<Pollutant, Float>>> result = new TimeBinMap<>(binSize,startTime);
 
         logger.info("Starting grid computation...");
 
         for (var bin : timeBinsWithEmissions.getTimeBins()) {
             logger.info("creating grid for time bin with start time: " + bin.getStartTime());
-            Grid<Map<Pollutant, Double>> grid = writeAllLinksToGrid(bin.getValue());
+            Grid<Map<Pollutant, Float>> grid = writeAllLinksToGrid(bin.getValue());
             result.getTimeBin(bin.getStartTime()).setValue(grid);
         }
 
@@ -143,14 +143,14 @@ public class EmissionGridAnalyzerMSM {
      * @return tuple containing the start time of the next time bin and the emissions grid for that time bin. Returns
      * null if there are no further time bins.
      */
-    public Tuple<Double, String> processNextTimeBin() {
+    public Tuple<Double, String> processNextTimeBinToString() {
         if (this.timeBins == null) throw new RuntimeException("Must call processTimeBinsWithEmissions() first.");
         if (!this.timeBins.hasNext()) throw new RuntimeException("processNextTimeBin() was called too many times");
 
         TimeBinMap.TimeBin<Map<Id<Link>, EmissionsByPollutant>> nextBin = this.timeBins.next();
         logger.info("creating grid for time bin with start time: " + nextBin.getStartTime());
 
-        Grid<Map<Pollutant, Double>> grid = writeAllLinksToGrid(nextBin.getValue());
+        Grid<Map<Pollutant, Float>> grid = writeAllLinksToGrid(nextBin.getValue());
 
         ObjectMapper mapper = createObjectMapper();
         try {
@@ -158,6 +158,26 @@ public class EmissionGridAnalyzerMSM {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Generate the emissions grid data for the next time bin. Requires that the events file has already
+     * been processed by calling processTimeBinsWithEmissions(). This method should be called in a loop
+     * to exhaust the time bin iterator.
+     *
+     * @return tuple containing the start time of the next time bin and the emissions grid for that time bin. Returns
+     * null if there are no further time bins.
+     */
+    public Tuple<Double, Grid<Map<Pollutant, Float>>> processNextTimeBin() {
+        if (this.timeBins == null) throw new RuntimeException("Must call processTimeBinsWithEmissions() first.");
+        if (!this.timeBins.hasNext()) throw new RuntimeException("processNextTimeBin() was called too many times");
+
+        TimeBinMap.TimeBin<Map<Id<Link>, EmissionsByPollutant>> nextBin = this.timeBins.next();
+        logger.info("creating grid for time bin with start time: " + nextBin.getStartTime());
+
+        Grid<Map<Pollutant, Float>> grid = writeAllLinksToGrid(nextBin.getValue());
+
+        return Tuple.of(nextBin.getStartTime(), grid);
     }
 
     /**
@@ -170,7 +190,7 @@ public class EmissionGridAnalyzerMSM {
     public String processToJsonString(String eventsFile) {
 
         ObjectMapper mapper = createObjectMapper();
-        TimeBinMap<Grid<Map<Pollutant, Double>>> result = process(eventsFile);
+        TimeBinMap<Grid<Map<Pollutant, Float>>> result = process(eventsFile);
         try {
             return mapper.writeValueAsString(result);
         } catch (JsonProcessingException e) {
@@ -188,7 +208,7 @@ public class EmissionGridAnalyzerMSM {
     public void processToJsonFile(String eventsFile, String jsonFile) {
 
         ObjectMapper mapper = createObjectMapper();
-        TimeBinMap<Grid<Map<Pollutant, Double>>> result = process(eventsFile);
+        TimeBinMap<Grid<Map<Pollutant, Float>>> result = process(eventsFile);
 
         try {
             mapper.writeValue(new File(jsonFile), result);
@@ -212,6 +232,7 @@ public class EmissionGridAnalyzerMSM {
     private void writeAllLinksToGrid(Map<Id<Link>, EmissionsByPollutant> linksWithEmissions, String output, int timeBin) {
 
         final var grid = createGrid();
+
         logger.info("Start process links with emissions.");
 
         final var counter = new AtomicInteger();
@@ -235,10 +256,10 @@ public class EmissionGridAnalyzerMSM {
 
         try	(BufferedWriter writer=IOUtils.getBufferedWriter(output))	{
             writer.write("TIME,ID,X,Y,VALUE\n");
-            for	(Grid.Cell<Map<Pollutant,Double>> cell : grid.getCells())	{
+            for	(Grid.Cell<Map<Pollutant,Float>> cell : grid.getCells())	{
                 Coordinate coord = cell.getCoordinate();
-                Map<Pollutant,Double> pollutants = cell.getValue();
-                for	(Map.Entry<Pollutant,Double> e : pollutants.entrySet()) {
+                Map<Pollutant,Float> pollutants = cell.getValue();
+                for	(Map.Entry<Pollutant,Float> e : pollutants.entrySet()) {
                     Pollutant pollutant = e.getKey();
                     if (pollutant.name().equals("PM2_5_non_exhaust")) {
                         String cellId = (int) coord.x + "_" + (int) coord.y;
@@ -251,9 +272,9 @@ public class EmissionGridAnalyzerMSM {
         }
     }
 
-    private Grid<Map<Pollutant, Double>> writeAllLinksToGrid(Map<Id<Link>, EmissionsByPollutant> linksWithEmissions) {
+    private Grid<Map<Pollutant, Float>> writeAllLinksToGrid(Map<Id<Link>, EmissionsByPollutant> linksWithEmissions) {
 
-        final var grid = createGrid();
+        final var grid = createGrid(network);
         final var counter = new AtomicInteger();
 
         // using stream's forEach here, instead of for each loop, to parallelize processing
@@ -274,7 +295,7 @@ public class EmissionGridAnalyzerMSM {
         return grid;
     }
 
-    private void processLink(Link link, EmissionsByPollutant emissions, Grid<Map<Pollutant, Double>> grid) {
+    private void processLink(Link link, EmissionsByPollutant emissions, Grid<Map<Pollutant, Float>> grid) {
 
         // create a clipping area to speed up calculation time
         // use 5*smoothing radius as longer distances result in a weighting of effectively 0
@@ -289,15 +310,15 @@ public class EmissionGridAnalyzerMSM {
         }
     }
 
-    private void processCell(Grid.Cell<Map<Pollutant, Double>> cell, EmissionsByPollutant emissions, double weight) {
+    private void processCell(Grid.Cell<Map<Pollutant, Float>> cell, EmissionsByPollutant emissions, double weight) {
 
         for (var entry : emissions.getEmissions().entrySet()) {
             var emissionValue = entry.getValue() * weight * countScaleFactor;
-            cell.getValue().merge(entry.getKey(), emissionValue, Double::sum);
+            cell.getValue().merge(entry.getKey(), (float) emissionValue, Float::sum);
         }
     }
 
-    private void removeTinyValuesFromResults(Map<Pollutant, Double> values) {
+    private void removeTinyValuesFromResults(Map<Pollutant, Float> values) {
         values.entrySet().removeIf(entry -> entry.getValue() < minimumThreshold);
     }
 
@@ -306,12 +327,20 @@ public class EmissionGridAnalyzerMSM {
         return bounds.contains(linkCentroid);
     }
 
-    private Grid<Map<Pollutant, Double>> createGrid() {
+    private Grid<Map<Pollutant, Float>> createGrid() {
 
         if (gridType == GridType.Hexagonal)
             return new HexagonalGrid<>(gridSize, ConcurrentHashMap::new, bounds);
         else
             return new SquareGrid<>(gridSize, ConcurrentHashMap::new, bounds);
+    }
+
+    private Grid<Map<Pollutant, Float>> createGrid(Network network) {
+
+        if (gridType == GridType.Hexagonal)
+            return new HexagonalGrid<>(network, gridSize, ConcurrentHashMap::new, bounds);
+        else
+            return new SquareGrid<>(network, gridSize, ConcurrentHashMap::new, bounds);
     }
 
     private ObjectMapper createObjectMapper() {

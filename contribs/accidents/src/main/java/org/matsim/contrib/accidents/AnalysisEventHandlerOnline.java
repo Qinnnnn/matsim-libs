@@ -136,9 +136,6 @@ public final class AnalysisEventHandlerOnline extends AnalysisEventHandler {
 		}
 	}
 
-	private Id<Person> getDriverId(Id<Vehicle> vehicleId) {
-		return this.vehicleId2personId.get(vehicleId);
-	}
 
 	public double getDemand(Id<Link> linkId, int intervalNr) {
 		double demand = 0.;

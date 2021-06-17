@@ -1,10 +1,11 @@
 package org.matsim.contrib.accidents;
 
+import cern.colt.map.tdouble.OpenIntDoubleHashMap;
+import cern.colt.map.tfloat.OpenIntFloatHashMap;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.network.Link;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 
 public class AccidentRateCalculation {
@@ -43,17 +44,17 @@ public class AccidentRateCalculation {
         double meanCrash = getMeanCrashPoisson(link);
         double finalCrashRate = meanCrash*(1-probZeroCrash)/3./365.; //convert 3-year accident frequency to one-day frequency
 
-        Map<Integer, Double> crashRateByTimeOfDay = new HashMap<>();
+        OpenIntFloatHashMap crashRateByTimeOfDay = new OpenIntFloatHashMap();
         for(int hour : timeOfDayCoef.keySet()){
-            crashRateByTimeOfDay.put(hour, finalCrashRate*timeOfDayCoef.get(hour));
+            crashRateByTimeOfDay.put(hour, (float) (finalCrashRate*timeOfDayCoef.get(hour)));
         }
 
         switch (accidentSeverity){
             case LIGHT:
-                this.accidentsContext.getLinkId2info().get(link.getId()).getLightCrashRateByAccidentTypeByTime().put(accidentType, crashRateByTimeOfDay);
+                this.accidentsContext.getLinkId2info().get(link.getId()).getLightCasualityExposureByAccidentTypeByTime().put(accidentType, crashRateByTimeOfDay);
                 break;
             case SEVEREFATAL:
-                this.accidentsContext.getLinkId2info().get(link.getId()).getSevereFatalCrashRateByAccidentTypeByTime().put(accidentType, crashRateByTimeOfDay);
+                this.accidentsContext.getLinkId2info().get(link.getId()).getSevereFatalCasualityExposureByAccidentTypeByTime().put(accidentType, crashRateByTimeOfDay);
                 break;
             default:
                 throw new RuntimeException("Undefined accident severity " + accidentSeverity);

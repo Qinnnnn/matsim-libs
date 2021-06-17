@@ -1,5 +1,6 @@
 package org.matsim.contrib.accidents;
 
+import cern.colt.map.tfloat.OpenIntFloatHashMap;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -17,34 +18,32 @@ import org.matsim.core.scenario.ScenarioByInstanceModule;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.Map;
 
 public class AccidentRateModel {
     private static final Logger log = Logger.getLogger( AccidentRateModel.class );
     private Scenario scenario;
-    private final double SCALEFACTOR;
+    private final float SCALEFACTOR;
     private AccidentsContext accidentsContext = new AccidentsContext();
     private AnalysisEventHandler analysisEventHandler = new AnalysisEventHandler();
     private AnalysisEventHandlerOnline analysisEventHandlerOnline = new AnalysisEventHandlerOnline();
 
-    private static final double CAR_LIGHT_LIGHT = 1.23;
-    private static final double CAR_SEVERE_LIGHT = 0.29;
-    private static final double CAR_SEVERE_SEVERE = 1.01;
-    private static final double BIKECAR_LIGHT_LIGHT = 0.99;
-    private static final double BIKECAR_SEVERE_LIGHT = 0.01;
-    private static final double BIKECAR_SEVERE_SEVERE = 0.99;
-    private static final double BIKEBIKE_LIGHT_LIGHT = 1.05;
-    private static final double BIKEBIKE_SEVERE_LIGHT = 0.00;
-    private static final double BIKEBIKE_SEVERE_SEVERE = 1.00;
-    private static final double PED_LIGHT_LIGHT = 1.03;
-    private static final double PED_SEVERE_LIGHT = 0.05;
-    private static final double PED_SEVERE_SEVERE = 1.00;
+    private static final float CAR_LIGHT_LIGHT = 1.23f;
+    private static final float CAR_SEVERE_LIGHT = 0.29f;
+    private static final float CAR_SEVERE_SEVERE = 1.01f;
+    private static final float BIKECAR_LIGHT_LIGHT = 0.99f;
+    private static final float BIKECAR_SEVERE_LIGHT = 0.01f;
+    private static final float BIKECAR_SEVERE_SEVERE = 0.99f;
+    private static final float BIKEBIKE_LIGHT_LIGHT = 1.05f;
+    private static final float BIKEBIKE_SEVERE_LIGHT = 0.00f;
+    private static final float BIKEBIKE_SEVERE_SEVERE = 1.00f;
+    private static final float PED_LIGHT_LIGHT = 1.03f;
+    private static final float PED_SEVERE_LIGHT = 0.05f;
+    private static final float PED_SEVERE_SEVERE = 1.00f;
     private int count;
     private int counterCar;
     private int counterBikePed;
 
-    public AccidentRateModel(Scenario scenario, double scalefactor) {
+    public AccidentRateModel(Scenario scenario, float scalefactor) {
         this.scenario = scenario;
         SCALEFACTOR = scalefactor;
     }
@@ -67,32 +66,6 @@ public class AccidentRateModel {
         }
         new MatsimNetworkReader(scenario.getNetwork()).readFile(networkFile);
         log.info("Reading network file... Done.");
-
-        log.info("Reading car plans file...");
-        PopulationReader popReader = new PopulationReader(scenario);
-        String plansFile;
-        if (this.scenario.getConfig().controler().getRunId() == null || this.scenario.getConfig().controler().getRunId().equals("")) {
-            plansFile = this.scenario.getConfig().controler().getOutputDirectory() + "car/" + "output_plans.xml.gz";
-        } else {
-            plansFile = this.scenario.getConfig().controler().getOutputDirectory() + "car/" + this.scenario.getConfig().controler().getRunId() + ".output_plans.xml.gz";
-        }
-        popReader.readFile(plansFile);
-        log.info("Reading car plans file... Done.");
-
-        log.warn("Total population:" + scenario.getPopulation().getPersons().size());
-
-        log.info("Reading bikePed plans file...");
-        String plansFileBikePed;
-        if (this.scenario.getConfig().controler().getRunId() == null || this.scenario.getConfig().controler().getRunId().equals("")) {
-            plansFileBikePed = this.scenario.getConfig().controler().getOutputDirectory() + "bikePed/" + "output_plans.xml.gz";
-        } else {
-            plansFileBikePed = this.scenario.getConfig().controler().getOutputDirectory() + "bikePed/" + this.scenario.getConfig().controler().getRunId() + ".output_plans.xml.gz";
-        }
-        popReader.readFile(plansFileBikePed);
-        log.info("Reading bikePed plans file... Done.");
-        log.warn("Total population:" + scenario.getPopulation().getPersons().size());
-
-
 
         analysisEventHandlerOnline.setScenario(scenario);
         analysisEventHandlerOnline.setAccidentsContext(accidentsContext);
@@ -126,12 +99,6 @@ public class AccidentRateModel {
             this.accidentsContext.getLinkId2info().put(link.getId(), info);
         }
         log.info("Initializing all link-specific information... Done.");
-
-//        for (Person person : this.scenario.getPopulation().getPersons().values()) {
-//            AccidentAgentInfo info = new AccidentAgentInfo(person.getId());
-//            this.accidentsContext.getPersonId2info().put(person.getId(), info);
-//        }
-//        log.info("Initializing all agent-specific information... Done.");
 
 
         log.info("Link accident frequency calculation (by type by time of day) start.");
@@ -238,11 +205,11 @@ public class AccidentRateModel {
         }
         log.info("Initializing all link-specific information... Done.");
 
-//        for (Person person : this.scenario.getPopulation().getPersons().values()) {
-//            AccidentAgentInfo info = new AccidentAgentInfo(person.getId());
-//            this.accidentsContext.getPersonId2info().put(person.getId(), info);
-//        }
-//        log.info("Initializing all agent-specific information... Done.");
+        for (Person person : this.scenario.getPopulation().getPersons().values()) {
+            AccidentAgentInfo info = new AccidentAgentInfo(person.getId());
+            this.accidentsContext.getPersonId2info().put(person.getId(), info);
+        }
+        log.info("Initializing all agent-specific information... Done.");
 
 
         log.info("Link accident frequency calculation (by type by time of day) start.");
@@ -305,9 +272,6 @@ public class AccidentRateModel {
                             log.warn("link Id: " + linkId);
                         }
 
-                        if(linkInfo.getLightCasualityExposureByAccidentTypeByTime().get(AccidentType.CAR).get(hour)==null){
-                            log.warn("link Id: " + linkId + "| hour: " + hour);
-                        }
                         lightInjuryRisk += linkInfo.getLightCasualityExposureByAccidentTypeByTime().get(AccidentType.CAR).get(hour);
                         severeInjuryRisk += linkInfo.getSevereFatalCasualityExposureByAccidentTypeByTime().get(AccidentType.CAR).get(hour);
                         break;
@@ -333,24 +297,20 @@ public class AccidentRateModel {
     private void casualtyRateCalculation(Link link) {
         AccidentLinkInfo linkInfo = this.accidentsContext.getLinkId2info().get(link.getId());
         for (AccidentType accidentType : AccidentType.values()){
-            Map<Integer, Double> lightCasualtyByTime = new HashMap<>();
-            Map<Integer, Double> severeCasualtyByTime = new HashMap<>();
+            OpenIntFloatHashMap lightCasualtyByTime = new OpenIntFloatHashMap();
+            OpenIntFloatHashMap severeCasualtyByTime = new OpenIntFloatHashMap();
             for(int hour = 0; hour<=24; hour++) {
-                double lightCasualty = 0.0;
-                double severeCasualty = 0.0;
-                double lightCrash = 0.0;
-                double severeCrash = 0.0;
+                float lightCasualty = 0.0f;
+                float severeCasualty = 0.0f;
+                float lightCrash = 0.0f;
+                float severeCrash = 0.0f;
 
-                if(linkInfo.getLightCrashRateByAccidentTypeByTime().get(accidentType)!=null){
-                    if(linkInfo.getLightCrashRateByAccidentTypeByTime().get(accidentType).get(hour)!=null){
-                        lightCrash = linkInfo.getLightCrashRateByAccidentTypeByTime().get(accidentType).get(hour);
-                    }
+                if(linkInfo.getLightCasualityExposureByAccidentTypeByTime().get(accidentType)!=null){
+                    lightCrash = linkInfo.getLightCasualityExposureByAccidentTypeByTime().get(accidentType).get(hour);
                 }
 
-                if(linkInfo.getSevereFatalCrashRateByAccidentTypeByTime().get(accidentType)!=null){
-                    if(linkInfo.getSevereFatalCrashRateByAccidentTypeByTime().get(accidentType).get(hour)!=null){
-                        severeCrash = linkInfo.getSevereFatalCrashRateByAccidentTypeByTime().get(accidentType).get(hour);
-                    }
+                if(linkInfo.getSevereFatalCasualityExposureByAccidentTypeByTime().get(accidentType)!=null){
+                    severeCrash = linkInfo.getSevereFatalCasualityExposureByAccidentTypeByTime().get(accidentType).get(hour);
                 }
 
                  switch (accidentType){
@@ -380,8 +340,8 @@ public class AccidentRateModel {
                 lightCasualtyByTime.put(hour,lightCasualty);
                 severeCasualtyByTime.put(hour,severeCasualty);
             }
-            linkInfo.getLightCasualityRateByAccidentTypeByTime().put(accidentType,lightCasualtyByTime);
-            linkInfo.getSevereFatalCasualityRateByAccidentTypeByTime().put(accidentType,severeCasualtyByTime);
+            linkInfo.getLightCasualityExposureByAccidentTypeByTime().put(accidentType,lightCasualtyByTime);
+            linkInfo.getSevereFatalCasualityExposureByAccidentTypeByTime().put(accidentType,severeCasualtyByTime);
         }
     }
 
@@ -409,25 +369,25 @@ public class AccidentRateModel {
                 throw new RuntimeException("Undefined accident type " + accidentType);
             }
 
-            Map<Integer, Double> lightCasualtyExposureByTime = new HashMap<>();
-            Map<Integer, Double> severeCasualtyExposureByTime = new HashMap<>();
+            OpenIntFloatHashMap lightCasualtyExposureByTime = new OpenIntFloatHashMap();
+            OpenIntFloatHashMap severeCasualtyExposureByTime = new OpenIntFloatHashMap();
             for(int hour = 0; hour < 24; hour++) {
-                double lightCasualty = this.accidentsContext.getLinkId2info().get(link.getId()).getLightCasualityRateByAccidentTypeByTime().get(accidentType).get(hour);
-                double severeCasualty = this.accidentsContext.getLinkId2info().get(link.getId()).getSevereFatalCasualityRateByAccidentTypeByTime().get(accidentType).get(hour);
-                double lightCasualtyExposure =0.;
-                double severeCasualtyExposure = 0.;
+                float lightCasualty = this.accidentsContext.getLinkId2info().get(link.getId()).getLightCasualityExposureByAccidentTypeByTime().get(accidentType).get(hour);
+                float severeCasualty = this.accidentsContext.getLinkId2info().get(link.getId()).getSevereFatalCasualityExposureByAccidentTypeByTime().get(accidentType).get(hour);
+                float lightCasualtyExposure =0.f;
+                float severeCasualtyExposure = 0.f;
                 if(mode.equals("car")){
-                    if(analysisEventHandler.getDemand(link.getId(),mode,hour)!=0){
-                        lightCasualtyExposure = lightCasualty/((analysisEventHandler.getDemand(link.getId(),mode,hour))*SCALEFACTOR*1.5);
-                        severeCasualtyExposure = severeCasualty/((analysisEventHandler.getDemand(link.getId(),mode,hour))*SCALEFACTOR*1.5);
+                    if(analysisEventHandlerOnline.getDemand(link.getId(),mode,hour)!=0){
+                        lightCasualtyExposure = (float) (lightCasualty/((analysisEventHandlerOnline.getDemand(link.getId(),mode,hour))*SCALEFACTOR*1.5));
+                        severeCasualtyExposure = (float) (severeCasualty/((analysisEventHandlerOnline.getDemand(link.getId(),mode,hour))*SCALEFACTOR*1.5));
                     }else{
                         //log.warn(link.getId()+mode+hour);
                         counterCar++;
                     }
                 }else{
-                    if(analysisEventHandler.getDemand(link.getId(),mode,hour)!=0){
-                        lightCasualtyExposure = lightCasualty/(analysisEventHandler.getDemand(link.getId(),mode,hour)*SCALEFACTOR);
-                        severeCasualtyExposure = severeCasualty/(analysisEventHandler.getDemand(link.getId(),mode,hour)*SCALEFACTOR);
+                    if(analysisEventHandlerOnline.getDemand(link.getId(),mode,hour)!=0){
+                        lightCasualtyExposure = (float) (lightCasualty/(analysisEventHandlerOnline.getDemand(link.getId(),mode,hour)*SCALEFACTOR));
+                        severeCasualtyExposure = (float) (severeCasualty/(analysisEventHandlerOnline.getDemand(link.getId(),mode,hour)*SCALEFACTOR));
                     }else{
                         counterBikePed++;
                     }

@@ -4,6 +4,7 @@ import java.util.function.Supplier;
 
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.prep.PreparedGeometry;
+import org.matsim.api.core.v01.network.Network;
 
 /**
  * Square grid which holds values
@@ -32,6 +33,10 @@ public final class SquareGrid<T> extends Grid<T> {
      */
     public SquareGrid(final double centroidDistance, final Supplier<T> initialValueSupplier, final PreparedGeometry bounds) {
         super(centroidDistance, initialValueSupplier, bounds);
+    }
+
+    public SquareGrid(Network network, final double centroidDistance, final Supplier<T> initialValueSupplier, final PreparedGeometry bounds) {
+        super(network, centroidDistance, initialValueSupplier, bounds);
     }
 
     @Override

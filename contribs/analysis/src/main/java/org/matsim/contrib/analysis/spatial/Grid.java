@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.function.Supplier;
 
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.Envelope;
-import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.*;
 import org.locationtech.jts.geom.prep.PreparedGeometry;
 import org.locationtech.jts.geom.prep.PreparedGeometryFactory;
+import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.network.Network;
+import org.matsim.api.core.v01.network.Node;
 import org.matsim.core.utils.collections.QuadTree;
 
 /**
@@ -30,6 +30,15 @@ public abstract class Grid<T> {
     public Grid(final double horizontalCentroidDistance, final Supplier<T> initialValueSupplier, final PreparedGeometry bounds) {
         this.horizontalCentroidDistance = horizontalCentroidDistance;
         generateGrid(initialValueSupplier, bounds);
+    }
+
+    public Grid(Network network, final double horizontalCentroidDistance, final Supplier<T> initialValueSupplier, final Geometry bounds) {
+        this(network, horizontalCentroidDistance, initialValueSupplier, new PreparedGeometryFactory().create(bounds));
+    }
+
+    public Grid(Network network, final double horizontalCentroidDistance, final Supplier<T> initialValueSupplier, final PreparedGeometry bounds) {
+        this.horizontalCentroidDistance = horizontalCentroidDistance;
+        generate(network, initialValueSupplier, bounds);
     }
 
     /**
@@ -115,6 +124,25 @@ public abstract class Grid<T> {
             Coordinate coord = new Coordinate(x, y);
             if (bounds.contains(geometryFactory.createPoint(coord)))
                 quadTree.put(x, y, new Cell<>(coord, initialValueSupplier.get()));
+        }
+    }
+
+    //generate exposure receiver points on road network (network nodes, centroid node of each link)
+    private void generate(Network network, final Supplier<T> initialValueSupplier, final PreparedGeometry bounds) {
+        Envelope envelope = bounds.getGeometry().getEnvelopeInternal();
+
+        quadTree = new QuadTree<>(envelope.getMinX(), envelope.getMinY(), envelope.getMaxX(), envelope.getMaxY());
+
+        for(Node node : network.getNodes().values()){
+            Coordinate coord = new Coordinate(node.getCoord().getX(), node.getCoord().getY());
+            if (bounds.contains(geometryFactory.createPoint(coord)))
+                quadTree.put(coord.x, coord.y, new Cell<>(coord, initialValueSupplier.get()));
+        }
+
+        for(Link link : network.getLinks().values()){
+            Coordinate linkCentroid = new Coordinate(link.getCoord().getX(), link.getCoord().getY());
+            if (bounds.contains(geometryFactory.createPoint(linkCentroid)))
+                quadTree.put(linkCentroid.x, linkCentroid.y, new Cell<>(linkCentroid, initialValueSupplier.get()));
         }
     }
 

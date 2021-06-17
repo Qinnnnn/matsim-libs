@@ -19,6 +19,8 @@
 
 package org.matsim.contrib.accidents;
 
+import cern.colt.map.tdouble.OpenIntDoubleHashMap;
+import cern.colt.map.tfloat.OpenIntFloatHashMap;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 
@@ -35,17 +37,17 @@ public class AccidentLinkInfo {
 	
 	private final Map<Integer, TimeBinInfo> timeSpecificInfo = new HashMap<>();
 
-	private  Map<AccidentType, Map<Integer, Double>> lightCrashRateByAccidentTypeByTime = new HashMap<>();
+//	private  Map<AccidentType, Map<Integer, Double>> lightCrashRateByAccidentTypeByTime = new HashMap<>();
+//
+//	private  Map<AccidentType, Map<Integer, Double>> severeFatalCrashRateByAccidentTypeByTime = new HashMap<>();
+//
+//	private  Map<AccidentType, Map<Integer, Double>> lightCasualityRateByAccidentTypeByTime = new HashMap<>();
+//
+//	private  Map<AccidentType, Map<Integer, Double>> severeFatalCasualityRateByAccidentTypeByTime = new HashMap<>();
 
-	private  Map<AccidentType, Map<Integer, Double>> severeFatalCrashRateByAccidentTypeByTime = new HashMap<>();
+	private  Map<AccidentType, OpenIntFloatHashMap> lightCasualityExposureByAccidentTypeByTime = new HashMap<>();
 
-	private  Map<AccidentType, Map<Integer, Double>> lightCasualityRateByAccidentTypeByTime = new HashMap<>();
-
-	private  Map<AccidentType, Map<Integer, Double>> severeFatalCasualityRateByAccidentTypeByTime = new HashMap<>();
-
-	private  Map<AccidentType, Map<Integer, Double>> lightCasualityExposureByAccidentTypeByTime = new HashMap<>();
-
-	private  Map<AccidentType, Map<Integer, Double>> severeFatalCasualityExposureByAccidentTypeByTime = new HashMap<>();
+	private  Map<AccidentType, OpenIntFloatHashMap> severeFatalCasualityExposureByAccidentTypeByTime = new HashMap<>();
 
 	public AccidentLinkInfo(Id<Link> linkId) {
 		this.linkId = linkId;
@@ -59,27 +61,27 @@ public class AccidentLinkInfo {
 		return timeSpecificInfo;
 	}
 
-	public Map<AccidentType, Map<Integer, Double>> getLightCrashRateByAccidentTypeByTime() {
-		return lightCrashRateByAccidentTypeByTime;
-	}
+//	public Map<AccidentType, Map<Integer, Double>> getLightCrashRateByAccidentTypeByTime() {
+//		return lightCrashRateByAccidentTypeByTime;
+//	}
+//
+//	public Map<AccidentType, Map<Integer, Double>> getSevereFatalCrashRateByAccidentTypeByTime() {
+//		return severeFatalCrashRateByAccidentTypeByTime;
+//	}
+//
+//	public Map<AccidentType, Map<Integer, Double>> getLightCasualityRateByAccidentTypeByTime() {
+//		return lightCasualityRateByAccidentTypeByTime;
+//	}
+//
+//	public Map<AccidentType, Map<Integer, Double>> getSevereFatalCasualityRateByAccidentTypeByTime() {
+//		return severeFatalCasualityRateByAccidentTypeByTime;
+//	}
 
-	public Map<AccidentType, Map<Integer, Double>> getSevereFatalCrashRateByAccidentTypeByTime() {
-		return severeFatalCrashRateByAccidentTypeByTime;
-	}
-
-	public Map<AccidentType, Map<Integer, Double>> getLightCasualityRateByAccidentTypeByTime() {
-		return lightCasualityRateByAccidentTypeByTime;
-	}
-
-	public Map<AccidentType, Map<Integer, Double>> getSevereFatalCasualityRateByAccidentTypeByTime() {
-		return severeFatalCasualityRateByAccidentTypeByTime;
-	}
-
-	public Map<AccidentType, Map<Integer, Double>> getLightCasualityExposureByAccidentTypeByTime() {
+	public Map<AccidentType, OpenIntFloatHashMap> getLightCasualityExposureByAccidentTypeByTime() {
 		return lightCasualityExposureByAccidentTypeByTime;
 	}
 
-	public Map<AccidentType, Map<Integer, Double>> getSevereFatalCasualityExposureByAccidentTypeByTime() {
+	public Map<AccidentType, OpenIntFloatHashMap> getSevereFatalCasualityExposureByAccidentTypeByTime() {
 		return severeFatalCasualityExposureByAccidentTypeByTime;
 	}
 }

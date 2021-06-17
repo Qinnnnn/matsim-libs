@@ -4,6 +4,7 @@ import java.util.function.Supplier;
 
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.prep.PreparedGeometry;
+import org.matsim.api.core.v01.network.Network;
 
 /**
  * Hexagonal Grid which holds values
@@ -32,6 +33,10 @@ public final class HexagonalGrid<T> extends Grid<T> {
      */
     public HexagonalGrid(double horizontalCentroidDistance, Supplier<T> initialValueSupplier, PreparedGeometry bounds) {
         super(horizontalCentroidDistance, initialValueSupplier, bounds);
+    }
+
+    public HexagonalGrid(Network network, double horizontalCentroidDistance, Supplier<T> initialValueSupplier, PreparedGeometry bounds) {
+        super(network,horizontalCentroidDistance, initialValueSupplier, bounds);
     }
 
     @Override
